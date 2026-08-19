@@ -4,10 +4,12 @@ namespace PasswordVale.Models.Domain;
 
 public class Vault(IDataService dataService)
 {
+    private MasterPassword? _masterPasswordRecord;
+
     public async Task Initialize()
     {
-        var masterPwRecord = await dataService.GetMasterPassword();
-        if (masterPwRecord is null)
+        _masterPasswordRecord = await dataService.GetMasterPassword();
+        if (_masterPasswordRecord is null)
         {
             CurrentState = VaultState.NotConfigured;
             return;
