@@ -3,6 +3,7 @@
 using Microsoft.Extensions.DependencyInjection;
 
 using PasswordVale.Contracts;
+using PasswordVale.Services;
 
 namespace PasswordVale.Views;
 

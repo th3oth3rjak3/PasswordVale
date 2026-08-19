@@ -1,11 +1,17 @@
 ﻿using PasswordVale.Contracts;
 
-namespace PasswordVale.Models.Domain;
+namespace PasswordVale.Services;
 
+/// <summary>
+/// The password vault which manages application state.
+/// </summary>
 public class Vault(IDataService dataService)
 {
     private MasterPassword? _masterPasswordRecord;
 
+    /// <summary>
+    /// Initialize the vault. This should only be done once when the application starts.
+    /// </summary>
     public async Task Initialize()
     {
         _masterPasswordRecord = await dataService.GetMasterPassword();
@@ -18,6 +24,9 @@ public class Vault(IDataService dataService)
         CurrentState = VaultState.Locked;
     }
 
+    /// <summary>
+    /// The current state of the vault.
+    /// </summary>
     public VaultState CurrentState
     {
         get;
@@ -28,5 +37,8 @@ public class Vault(IDataService dataService)
         }
     }
 
+    /// <summary>
+    /// Called when CurrentState changes.
+    /// </summary>
     public event Action<VaultState>? OnStateChanged;
 }
