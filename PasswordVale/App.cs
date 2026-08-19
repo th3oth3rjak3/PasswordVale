@@ -49,6 +49,8 @@ public class App : Application
 
         // Register core services
         services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<IDataService, FakeDataService>();
+        services.AddSingleton<Vault>();
 
         // Register Pages
         services.AddTransient<LoadingPage>();

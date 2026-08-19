@@ -49,7 +49,7 @@ public class LoadingPage : UserControl
         Content = rootGrid;
     }
 
-    // Public method to update status text as DB steps finish
+    // Public method to update status text as loading steps finish
     public void UpdateStatus(string message)
     {
         _statusLabel.Text = message;

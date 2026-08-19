@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Avalonia.Threading;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using PasswordVale.Contracts;
 
@@ -7,13 +9,19 @@ namespace PasswordVale.Views;
 public class MainWindow : Window
 {
     private readonly INavigationService _navigationService;
+    private readonly IDataService _dataService;
     private readonly IServiceProvider _services;
     private readonly LoadingPage _loadingPage;
+    private readonly Vault _vault;
 
-    public MainWindow(IServiceProvider services, INavigationService navigationService)
+    public MainWindow(IServiceProvider services, INavigationService navigationService, IDataService dataService, Vault vault)
     {
         _services = services;
         _navigationService = navigationService;
+        _dataService = dataService;
+        _vault = vault;
+
+        _vault.OnMasterPasswordChange += MasterPasswordStateChanged;
         _navigationService.OnNavigated += NavigationChanged;
 
         Title = "Password Manager";
@@ -37,8 +45,19 @@ public class MainWindow : Window
             AppPage.Setup => _services.GetRequiredService<SetupPage>(),
             AppPage.Unlock => _services.GetRequiredService<UnlockPage>(),
             AppPage.Vault => _services.GetRequiredService<VaultPage>(),
-            _ => throw new InvalidOperationException("Invalid page navigation"),
+            _ => throw new InvalidOperationException($"App Page '{Enum.GetName(page)}' does not support navigation."),
         };
+    }
+
+    private void MasterPasswordStateChanged(MasterPassword? masterPasswordState)
+    {
+        if (masterPasswordState is null)
+        {
+            _navigationService.NavigateTo(AppPage.Setup);
+            return;
+        }
+
+        _navigationService.NavigateTo(AppPage.Unlock);
     }
 
     // Load initial application state from the database.
@@ -48,14 +67,9 @@ public class MainWindow : Window
         {
             await Task.Run(async () =>
             {
-                await Task.Delay(TimeSpan.FromSeconds(5));
-                // Decide which page to show based on database contents
+                await Task.Delay(TimeSpan.FromSeconds(2));
+                await Dispatcher.UIThread.InvokeAsync(async () => _vault.MasterPasswordRecord = await _dataService.GetMasterPassword());
             });
-
-            // TODO: actually load the database information to determine the current
-            // vault status.
-            // Pretend the db is configured and just navigate to the unlock page.
-            _navigationService.NavigateTo(AppPage.Unlock);
         }
         catch (Exception ex)
         {
@@ -66,5 +80,6 @@ public class MainWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _navigationService.OnNavigated -= NavigationChanged;
+        _vault.OnMasterPasswordChange -= MasterPasswordStateChanged;
     }
 }
