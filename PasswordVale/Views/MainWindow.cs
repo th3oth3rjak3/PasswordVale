@@ -9,19 +9,17 @@ namespace PasswordVale.Views;
 public class MainWindow : Window
 {
     private readonly INavigationService _navigationService;
-    private readonly IDataService _dataService;
     private readonly IServiceProvider _services;
     private readonly LoadingPage _loadingPage;
     private readonly Vault _vault;
 
-    public MainWindow(IServiceProvider services, INavigationService navigationService, IDataService dataService, Vault vault)
+    public MainWindow(IServiceProvider services, INavigationService navigationService, Vault vault)
     {
         _services = services;
         _navigationService = navigationService;
-        _dataService = dataService;
         _vault = vault;
 
-        _vault.OnMasterPasswordChange += MasterPasswordStateChanged;
+        _vault.OnStateChanged += VaultStateChanged;
         _navigationService.OnNavigated += NavigationChanged;
 
         Title = "Password Manager";
@@ -49,15 +47,22 @@ public class MainWindow : Window
         };
     }
 
-    private void MasterPasswordStateChanged(MasterPassword? masterPasswordState)
+    private void VaultStateChanged(VaultState vaultState)
     {
-        if (masterPasswordState is null)
+        switch (vaultState)
         {
-            _navigationService.NavigateTo(AppPage.Setup);
-            return;
+            case VaultState.NotConfigured:
+                _navigationService.NavigateTo(AppPage.Setup);
+                return;
+            case VaultState.Locked:
+                _navigationService.NavigateTo(AppPage.Unlock);
+                return;
+            case VaultState.Unlocked:
+                _navigationService.NavigateTo(AppPage.Vault);
+                return;
+            default:
+                throw new InvalidOperationException($"Vault State '{Enum.GetName(vaultState)}' unhandled in Main Window");
         }
-
-        _navigationService.NavigateTo(AppPage.Unlock);
     }
 
     // Load initial application state from the database.
@@ -68,7 +73,7 @@ public class MainWindow : Window
             await Task.Run(async () =>
             {
                 await Task.Delay(TimeSpan.FromSeconds(2));
-                await Dispatcher.UIThread.InvokeAsync(async () => _vault.MasterPasswordRecord = await _dataService.GetMasterPassword());
+                await Dispatcher.UIThread.InvokeAsync(async () => await _vault.Initialize());
             });
         }
         catch (Exception ex)
@@ -80,6 +85,6 @@ public class MainWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _navigationService.OnNavigated -= NavigationChanged;
-        _vault.OnMasterPasswordChange -= MasterPasswordStateChanged;
+        _vault.OnStateChanged -= VaultStateChanged;
     }
 }

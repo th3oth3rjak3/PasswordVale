@@ -1,18 +1,30 @@
-﻿namespace PasswordVale.Models.Domain;
+﻿using PasswordVale.Contracts;
 
-public class Vault
+namespace PasswordVale.Models.Domain;
+
+public class Vault(IDataService dataService)
 {
-    public MasterPassword? MasterPasswordRecord
+    public async Task Initialize()
+    {
+        var masterPwRecord = await dataService.GetMasterPassword();
+        if (masterPwRecord is null)
+        {
+            CurrentState = VaultState.NotConfigured;
+            return;
+        }
+
+        CurrentState = VaultState.Locked;
+    }
+
+    public VaultState CurrentState
     {
         get;
-        set
+        private set
         {
             field = value;
-            OnMasterPasswordChange?.Invoke(value);
+            OnStateChanged?.Invoke(value);
         }
     }
 
-    public event Action<MasterPassword?>? OnMasterPasswordChange;
-
-    public bool Locked { get; private set; } = true;
+    public event Action<VaultState>? OnStateChanged;
 }
