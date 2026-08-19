@@ -49,7 +49,20 @@ public class Vault(IDataService dataService)
     public async Task SetMasterPassword(string password)
     {
         // TODO: Exception handling
-        var pw = await dataService.CreateMasterPassword(password);
+        // TODO: proper hashing
+        _ = password;
+
+        var id = Guid.NewGuid();
+
+        var pw = new MasterPassword()
+        {
+            Id = id,
+            PasswordHash = $"Hash For {id}",
+            AesEncryptionKeySalt = $"Salt for {id}",
+        };
+
+
+        await dataService.CreateMasterPassword(pw);
         _masterPasswordRecord = pw;
         CurrentState = VaultState.Locked;
     }

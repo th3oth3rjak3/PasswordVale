@@ -10,9 +10,8 @@ public interface IDataService
     /// <summary>
     /// Create a new master password record. This method will throw an exception if one already exists.
     /// </summary>
-    /// <param name="masterPassword">The plaintext password to use as the master password.</param>
-    /// <returns>The created master password record.</returns>
-    public Task<MasterPassword> CreateMasterPassword(string masterPassword);
+    /// <param name="masterPassword">The hashed master password record used to unlock the vault.</param>
+    public Task CreateMasterPassword(MasterPassword masterPassword);
 
     /// <summary>
     /// GetMasterPassword attempts to fetch a master password record. It assumes that there

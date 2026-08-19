@@ -8,21 +8,11 @@ public class FakeDataService : IDataService
     private MasterPassword? _masterPassword;
     private readonly List<PasswordEntrySummary> _passwordEntries = [];
 
-    public Task<MasterPassword> CreateMasterPassword(string masterPassword)
+    public Task CreateMasterPassword(MasterPassword masterPassword)
     {
-        // Just throw it away since it's a fake.
-        _ = masterPassword;
+        _masterPassword = masterPassword;
 
-        var id = Guid.NewGuid();
-
-        _masterPassword = new MasterPassword()
-        {
-            Id = id,
-            PasswordHash = $"Hash For {id}",
-            AesEncryptionKeySalt = $"Salt for {id}",
-        };
-
-        return Task.FromResult(_masterPassword);
+        return Task.CompletedTask;
     }
 
 
