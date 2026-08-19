@@ -1,4 +1,4 @@
-﻿namespace PasswordVale.Models;
+﻿namespace PasswordVale.Models.Domain;
 
 public enum VaultState
 {
