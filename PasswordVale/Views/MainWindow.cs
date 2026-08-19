@@ -23,7 +23,7 @@ public class MainWindow : Window
         _vault.OnStateChanged += VaultStateChanged;
         _navigationService.OnNavigated += NavigationChanged;
 
-        Title = "Password Manager";
+        Title = "Password Vale";
         Width = 800;
         Height = 600;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -33,7 +33,7 @@ public class MainWindow : Window
         // Immediately show the loading page.
         Content = _loadingPage;
 
-        // Handle initial data fetch when window opens
+        // Handle vault initialization when window opens
         Opened += OnOpened;
     }
 
@@ -66,7 +66,7 @@ public class MainWindow : Window
         }
     }
 
-    // Load initial application state from the database.
+    // Initialize the vault.
     private async void OnOpened(object? sender, EventArgs e)
     {
         try

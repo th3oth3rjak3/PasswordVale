@@ -41,4 +41,16 @@ public class Vault(IDataService dataService)
     /// Called when CurrentState changes.
     /// </summary>
     public event Action<VaultState>? OnStateChanged;
+
+    /// <summary>
+    /// Set the master password for the vault.
+    /// </summary>
+    /// <param name="password">The master password that unlocks the vault.</param>
+    public async Task SetMasterPassword(string password)
+    {
+        // TODO: Exception handling
+        var pw = await dataService.CreateMasterPassword(password);
+        _masterPasswordRecord = pw;
+        CurrentState = VaultState.Locked;
+    }
 }
