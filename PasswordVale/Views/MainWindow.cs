@@ -1,17 +1,16 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-using PasswordVale.Models;
-using PasswordVale.Services;
+using PasswordVale.Contracts;
 
 namespace PasswordVale.Views;
 
 public class MainWindow : Window
 {
-    private readonly NavigationService _navigationService;
+    private readonly INavigationService _navigationService;
     private readonly IServiceProvider _services;
     private readonly LoadingPage _loadingPage;
 
-    public MainWindow(IServiceProvider services, NavigationService navigationService)
+    public MainWindow(IServiceProvider services, INavigationService navigationService)
     {
         _services = services;
         _navigationService = navigationService;

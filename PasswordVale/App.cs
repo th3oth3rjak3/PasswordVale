@@ -4,6 +4,7 @@ using Avalonia.Themes.Fluent;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using PasswordVale.Contracts;
 using PasswordVale.Services;
 using PasswordVale.Views;
 
@@ -47,7 +48,7 @@ public class App : Application
         var services = new ServiceCollection();
 
         // Register core services
-        services.AddSingleton<NavigationService>();
+        services.AddSingleton<INavigationService, NavigationService>();
 
         // Register Pages
         services.AddTransient<LoadingPage>();

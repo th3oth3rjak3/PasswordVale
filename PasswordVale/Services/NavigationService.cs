@@ -1,8 +1,8 @@
-﻿using PasswordVale.Models;
+﻿using PasswordVale.Contracts;
 
 namespace PasswordVale.Services;
 
-public class NavigationService
+public class NavigationService : INavigationService
 {
     public event Action<AppPage>? OnNavigated;
 
