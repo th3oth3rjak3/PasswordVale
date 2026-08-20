@@ -50,20 +50,23 @@ public class MainWindow : Window
 
     private void VaultStateChanged(VaultState vaultState)
     {
-        switch (vaultState)
+        Dispatcher.UIThread.Post(() =>
         {
-            case VaultState.NotConfigured:
-                _navigationService.NavigateTo(AppPage.Setup);
-                return;
-            case VaultState.Locked:
-                _navigationService.NavigateTo(AppPage.Unlock);
-                return;
-            case VaultState.Unlocked:
-                _navigationService.NavigateTo(AppPage.Vault);
-                return;
-            default:
-                throw new InvalidOperationException($"Vault State '{Enum.GetName(vaultState)}' unhandled in Main Window");
-        }
+            switch (vaultState)
+            {
+                case VaultState.NotConfigured:
+                    _navigationService.NavigateTo(AppPage.Setup);
+                    return;
+                case VaultState.Locked:
+                    _navigationService.NavigateTo(AppPage.Unlock);
+                    return;
+                case VaultState.Unlocked:
+                    _navigationService.NavigateTo(AppPage.Vault);
+                    return;
+                default:
+                    throw new InvalidOperationException($"Vault State '{Enum.GetName(vaultState)}' unhandled in Main Window");
+            }
+        });
     }
 
     // Initialize the vault.
@@ -74,12 +77,12 @@ public class MainWindow : Window
             await Task.Run(async () =>
             {
                 await Task.Delay(TimeSpan.FromSeconds(2));
-                await Dispatcher.UIThread.InvokeAsync(async () => await _vault.Initialize());
+                await _vault.Initialize();
             });
         }
         catch (Exception ex)
         {
-            _loadingPage.UpdateStatus($"Startup Failed: {ex.Message}");
+            Dispatcher.UIThread.Post(() => _loadingPage.UpdateStatus($"Startup Failed: {ex.Message}"));
         }
     }
 
