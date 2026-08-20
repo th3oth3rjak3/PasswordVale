@@ -3,6 +3,6 @@
 public class MasterPassword
 {
     public required Guid Id { get; set; }
-    public required string PasswordHash { get; set; }
-    public required string AesEncryptionKeySalt { get; set; }
+    public required byte[] PasswordHash { get; set; }
+    public required byte[] AesEncryptionKeySalt { get; set; }
 }

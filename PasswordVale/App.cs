@@ -50,6 +50,7 @@ public class App : Application
         // Register core services
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IDataService, FakeDataService>();
+        services.AddSingleton<ICryptoService, CryptoService>();
         services.AddSingleton<Vault>();
 
         // Register Pages

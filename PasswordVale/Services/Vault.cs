@@ -57,8 +57,8 @@ public class Vault(IDataService dataService)
         var pw = new MasterPassword()
         {
             Id = id,
-            PasswordHash = $"Hash For {id}",
-            AesEncryptionKeySalt = $"Salt for {id}",
+            PasswordHash = Convert.FromBase64String($"Hash For {id}"),
+            AesEncryptionKeySalt = Convert.FromBase64String($"Salt for {id}"),
         };
 
 
