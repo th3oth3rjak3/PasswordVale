@@ -5,7 +5,7 @@ namespace PasswordVale.Services;
 /// <summary>
 /// The password vault which manages application state.
 /// </summary>
-public class Vault(IDataService dataService)
+public class Vault(IDataService dataService, ICryptoService cryptoService)
 {
     private MasterPassword? _masterPasswordRecord;
 
@@ -46,24 +46,27 @@ public class Vault(IDataService dataService)
     /// Set the master password for the vault.
     /// </summary>
     /// <param name="password">The master password that unlocks the vault.</param>
-    public async Task SetMasterPassword(string password)
+    public async Task SetMasterPassword(byte[] password)
     {
-        // TODO: Exception handling
-        // TODO: proper hashing
-        _ = password;
+        var pw = cryptoService.HashMasterPassword(password);
+        var salt = cryptoService.GenerateRandomSalt();
 
-        var id = Guid.NewGuid();
-
-        var pw = new MasterPassword()
+        var masterPw = new MasterPassword
         {
-            Id = id,
-            PasswordHash = Convert.FromBase64String($"Hash For {id}"),
-            AesEncryptionKeySalt = Convert.FromBase64String($"Salt for {id}"),
+            Id = Guid.NewGuid(),
+            PasswordHash = pw,
+            AesEncryptionKeySalt = salt,
         };
 
+        await dataService.CreateMasterPassword(masterPw);
+        _masterPasswordRecord = masterPw;
 
-        await dataService.CreateMasterPassword(pw);
-        _masterPasswordRecord = pw;
+        cryptoService.ZeroMemory(password);
+
+        // TODO: decide if being auto-logged in after setting the pw is a better user experience.
+        // We could choose to let the user be "logged in" already
+        // since they just gave us their password. Logging in forces
+        // them to remember the password though, so it might be useful.
         CurrentState = VaultState.Locked;
     }
 }

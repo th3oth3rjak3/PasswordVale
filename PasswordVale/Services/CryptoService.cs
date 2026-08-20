@@ -37,14 +37,14 @@ public class CryptoService : ICryptoService
     /// </summary>
     /// <param name="passwordBytes">The raw master password input from the user.</param>
     /// <returns>The Argon2id hash.</returns>
-    public string HashMasterPassword(byte[] passwordBytes)
+    public byte[] HashMasterPassword(byte[] passwordBytes)
     {
         var saltBytes = GenerateRandomSalt();
         var config = GenerateArgon2Config(passwordBytes, saltBytes);
         using var argon2 = new Argon2(config);
         var hash = Argon2.Hash(config);
         CryptographicOperations.ZeroMemory(passwordBytes);
-        return hash;
+        return Encoding.UTF8.GetBytes(hash);
     }
 
     /// <summary>
@@ -54,7 +54,7 @@ public class CryptoService : ICryptoService
     /// <param name="passwordHash">The hashed password to compare against.</param>
     /// <returns>True when valid, otherwise false.</returns>
     public bool VerifyMasterPassword(byte[] password, byte[] passwordHash) =>
-        Argon2.Verify(Convert.ToBase64String(passwordHash), password);
+        Argon2.Verify(Encoding.UTF8.GetString(passwordHash), password);
 
     /// <summary>
     /// Derive an AES-256 encryption key from the master password using Argon2id.
@@ -94,7 +94,7 @@ public class CryptoService : ICryptoService
     /// <param name="saltBytes">The salt to be used in the hashing process, provided as a byte array. Cannot be null or empty.</param>
     /// <returns>An <see cref="Argon2Config"/> object configured with Argon2id mode, a time cost of 4 iterations, a memory cost
     /// of 64 MiB, 4 lanes for parallelism, and a hash length of 32 bytes.</returns>
-    public Argon2Config GenerateArgon2Config(byte[] passwordBytes, byte[] saltBytes) =>
+    private static Argon2Config GenerateArgon2Config(byte[] passwordBytes, byte[] saltBytes) =>
         new()
         {
             Type = Argon2Type.DataIndependentAddressing, // Argon2id
@@ -122,19 +122,21 @@ public class CryptoService : ICryptoService
     /// <param name="plaintext">The plaintext string to encrypt. This value cannot be <see langword="null"/> or empty.</param>
     /// <returns>A Base64-encoded string containing the encrypted data, which includes the nonce, authentication tag, and
     /// ciphertext.</returns>
-    public string EncryptEntry(byte[] aesKey, byte[] plaintext)
+    public byte[] EncryptEntry(byte[] aesKey, string plaintext)
     {
+        var plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
+
         if (aesKey.Length != 32)
             throw new ArgumentException("AES key must be 256 bits (32 bytes).", nameof(aesKey));
         var nonce = RandomNumberGenerator.GetBytes(NonceSize);
         var tag = new byte[TagSize];
-        var ciphertext = new byte[plaintext.Length];
+        var ciphertext = new byte[plaintextBytes.Length];
 
         using var aesGcm = new AesGcm(aesKey, TagSize);
-        aesGcm.Encrypt(nonce, plaintext, ciphertext, tag);
+        aesGcm.Encrypt(nonce, plaintextBytes, ciphertext, tag);
 
-        var encrypted = Convert.ToBase64String([.. nonce, .. tag, .. ciphertext]);
-        ZeroMemory(plaintext);
+        byte[] encrypted = [.. nonce, .. tag, .. ciphertext];
+        ZeroMemory(plaintextBytes);
         return encrypted;
     }
 

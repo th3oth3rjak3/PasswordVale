@@ -1,6 +1,9 @@
-﻿using Avalonia.Interactivity;
+﻿using System.Text;
+
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 
 using PasswordVale.Services;
 
@@ -136,7 +139,8 @@ public class SetupPage : UserControl
         {
             SetUiBusy(true, "Creating vault...");
 
-            await _vault.SetMasterPassword(masterPassword);
+            var masterPasswordBytes = Encoding.UTF8.GetBytes(masterPassword);
+            await Dispatcher.UIThread.InvokeAsync(async () => await _vault.SetMasterPassword(masterPasswordBytes));
 
             _messageText.Text = "Vault setup complete.";
             _messageText.Foreground = Brushes.LightGreen;
