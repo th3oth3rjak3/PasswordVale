@@ -6,7 +6,7 @@ namespace PasswordVale.Services;
 public class FakeDataService : IDataService
 {
     private MasterPassword? _masterPassword;
-    private readonly List<PasswordEntrySummary> _passwordEntries = [];
+    private readonly List<PasswordEntry> _passwordEntries = [];
 
     public Task CreateMasterPassword(MasterPassword masterPassword)
     {
@@ -18,13 +18,13 @@ public class FakeDataService : IDataService
 
     public Task CreatePasswordEntry(PasswordEntryWrite newEntry)
     {
-        var newItem = new PasswordEntrySummary()
+        var newItem = new PasswordEntry()
         {
             Id = Guid.NewGuid(),
             Name = newEntry.Name ?? "",
-            Username = newEntry.Username,
+            EncryptedPassword = newEntry.EncryptedPassword,
+            Username = newEntry.Username ?? "",
             Favorite = newEntry.Favorite,
-            Tags = newEntry.Tags,
         };
 
         _passwordEntries.Add(newItem);
@@ -43,7 +43,14 @@ public class FakeDataService : IDataService
     }
 
     public Task<List<PasswordEntrySummary>> GetAllPasswordEntries() =>
-        Task.FromResult(_passwordEntries);
+        Task.FromResult(_passwordEntries.Select(pw => new PasswordEntrySummary()
+        {
+            Id = pw.Id,
+            Username = pw.Username,
+            Name = pw.Name,
+            Favorite = pw.Favorite,
+        })
+        .ToList());
 
     public Task<MasterPassword?> GetMasterPassword() =>
         Task.FromResult(_masterPassword);
@@ -57,10 +64,12 @@ public class FakeDataService : IDataService
         }
 
         found.Favorite = updatedEntry.Favorite;
-        found.Username = updatedEntry.Username;
-        found.Tags.Clear();
-        found.Tags.AddRange(updatedEntry.Tags);
+        found.Username = updatedEntry.Username ?? "";
+        found.EncryptedPassword = updatedEntry.EncryptedPassword;
 
         return Task.CompletedTask;
     }
+
+    public Task<PasswordEntry?> GetPasswordEntryRaw(Guid id) =>
+        Task.FromResult(_passwordEntries.SingleOrDefault(pw => pw.Id == id));
 }

@@ -8,6 +8,7 @@ namespace PasswordVale.Services;
 public class Vault(IDataService dataService, ICryptoService cryptoService)
 {
     private MasterPassword? _masterPasswordRecord;
+    private byte[]? _sessionAesKey;
 
     /// <summary>
     /// Initialize the vault. This should only be done once when the application starts.
@@ -83,6 +84,7 @@ public class Vault(IDataService dataService, ICryptoService cryptoService)
 
             if (cryptoService.VerifyMasterPassword(password, _masterPasswordRecord.PasswordHash))
             {
+                _sessionAesKey = cryptoService.DeriveAesKey(password, _masterPasswordRecord.AesEncryptionKeySalt);
                 CurrentState = VaultState.Unlocked;
                 return;
             }
@@ -93,5 +95,36 @@ public class Vault(IDataService dataService, ICryptoService cryptoService)
         {
             cryptoService.ZeroMemory(password);
         }
+    }
+
+    /// <summary>
+    /// Locks the vault and immediately wipes the session AES key from memory.
+    /// </summary>
+    public void Lock()
+    {
+        if (_sessionAesKey != null)
+        {
+            cryptoService.ZeroMemory(_sessionAesKey);
+            _sessionAesKey = null;
+        }
+
+        CurrentState = VaultState.Locked;
+    }
+
+    /// <summary>
+    /// Decrypts a specific entry on-demand using the active session key.
+    /// </summary>
+    public async Task<string> GetDecryptedPassword(Guid id)
+    {
+        if (CurrentState != VaultState.Unlocked || _sessionAesKey == null)
+            throw new InvalidOperationException("Vault is locked.");
+
+        // 1. Fetch the raw encrypted bytes [nonce + tag + ciphertext] from DataService
+        var entry = await dataService.GetPasswordEntryRaw(id);
+        if (entry == null)
+            throw new KeyNotFoundException("Entry not found.");
+
+        // 2. Decrypt on-demand
+        return cryptoService.DecryptEntry(_sessionAesKey, entry.EncryptedPassword);
     }
 }

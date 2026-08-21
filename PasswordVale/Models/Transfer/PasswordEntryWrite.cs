@@ -11,7 +11,7 @@ public class PasswordEntryWrite
     public string? Username { get; set; }
 
     [Required]
-    public string? Password { get; set; }
+    public required byte[] EncryptedPassword { get; set; }
 
     public bool Favorite { get; set; }
     public List<string> Tags { get; set; } = [];

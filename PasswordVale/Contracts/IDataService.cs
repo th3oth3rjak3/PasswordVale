@@ -26,6 +26,13 @@ public interface IDataService
     public Task<List<PasswordEntrySummary>> GetAllPasswordEntries();
 
     /// <summary>
+    /// Get the raw password entry, rather than a summary.
+    /// </summary>
+    /// <param name="id">The id.</param>
+    /// <returns>A password entry when found, or null when missing.</returns>
+    public Task<PasswordEntry?> GetPasswordEntryRaw(Guid id);
+
+    /// <summary>
     /// Create a new password entry.
     /// </summary>
     /// <param name="newEntry">The details for the new entry.</param>
