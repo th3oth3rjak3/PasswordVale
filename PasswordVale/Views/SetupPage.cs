@@ -141,9 +141,6 @@ public class SetupPage : UserControl
             var masterPasswordBytes = Encoding.UTF8.GetBytes(masterPassword);
             await Task.Run(async () => await _vault.SetMasterPassword(masterPasswordBytes));
 
-            _messageText.Text = "Vault setup complete.";
-            _messageText.Foreground = Brushes.LightGreen;
-
             // clear password fields after success
             _createPassword.Text = string.Empty;
             _confirmPassword.Text = string.Empty;

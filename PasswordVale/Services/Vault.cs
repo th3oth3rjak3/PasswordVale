@@ -69,4 +69,29 @@ public class Vault(IDataService dataService, ICryptoService cryptoService)
         // them to remember the password though, so it might be useful.
         CurrentState = VaultState.Locked;
     }
+
+    /// <summary>
+    /// Unlock the vault using the master password.
+    /// </summary>
+    /// <param name="password">The master password.</param>
+    public async Task Unlock(byte[] password)
+    {
+        try
+        {
+            if (_masterPasswordRecord is null)
+                throw new InvalidOperationException("Vault is not setup");
+
+            if (cryptoService.VerifyMasterPassword(password, _masterPasswordRecord.PasswordHash))
+            {
+                CurrentState = VaultState.Unlocked;
+                return;
+            }
+
+            throw new InvalidOperationException("Incorrect Password");
+        }
+        finally
+        {
+            cryptoService.ZeroMemory(password);
+        }
+    }
 }
