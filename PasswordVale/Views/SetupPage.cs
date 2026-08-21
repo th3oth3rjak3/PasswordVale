@@ -1,5 +1,6 @@
 ﻿using System.Text;
 
+using Avalonia;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -20,10 +21,25 @@ public class SetupPage : UserControl
     {
         _vault = vault;
 
+        var titleText = new TextBlock
+        {
+            Text = "Create Master Password",
+            FontSize = 20,
+            FontWeight = FontWeight.Bold,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+
+        var subtitleText = new TextBlock
+        {
+            Text = "Your master password encrypts the entire vault.",
+            FontSize = 12,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 8)
+        };
+
         _createPassword = new TextBox
         {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Width = 240,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             PasswordChar = '•',
             RevealPassword = false,
             PlaceholderText = "New Master Password"
@@ -31,8 +47,7 @@ public class SetupPage : UserControl
 
         _confirmPassword = new TextBox
         {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Width = 240,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             PasswordChar = '•',
             RevealPassword = false,
             PlaceholderText = "Confirm Master Password"
@@ -42,15 +57,17 @@ public class SetupPage : UserControl
         {
             HorizontalAlignment = HorizontalAlignment.Center,
             Foreground = Brushes.Gray,
-            FontSize = 14
+            FontSize = 13,
+            TextWrapping = TextWrapping.Wrap,
+            TextAlignment = TextAlignment.Center
         };
 
         _submitButton = new Button
         {
             Content = "Create Vault",
-            Width = 240,
-            HorizontalAlignment = HorizontalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Center,
+            FontWeight = FontWeight.SemiBold,
             IsEnabled = false
         };
 
@@ -58,35 +75,33 @@ public class SetupPage : UserControl
         _confirmPassword.TextChanged += (_, _) => ValidatePasswords();
         _submitButton.Click += SubmitButton_Click;
 
-        var titleText = new TextBlock
-        {
-            Text = "Create Master Password",
-            FontSize = 20,
-            FontWeight = FontWeight.Bold,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Foreground = Brushes.White
-        };
-
         var contentBox = new StackPanel
         {
-            Spacing = 16,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
+            Spacing = 14,
+            Children =
+            {
+                titleText,
+                subtitleText,
+                _createPassword,
+                _confirmPassword,
+                _messageText,
+                _submitButton
+            }
         };
 
-        contentBox.Children.Add(titleText);
-        contentBox.Children.Add(_createPassword);
-        contentBox.Children.Add(_confirmPassword);
-        contentBox.Children.Add(_messageText);
-        contentBox.Children.Add(_submitButton);
-
-        var grid = new Grid
+        var cardContainer = new Border
         {
-            Background = Brushes.Black
+            Width = 340,
+            Padding = new Thickness(24),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Child = contentBox
         };
 
-        grid.Children.Add(contentBox);
-        Content = grid;
+        Content = new Grid
+        {
+            Children = { cardContainer }
+        };
     }
 
     private void ValidatePasswords()
@@ -140,10 +155,6 @@ public class SetupPage : UserControl
 
             var masterPasswordBytes = Encoding.UTF8.GetBytes(masterPassword);
             await Task.Run(async () => await _vault.SetMasterPassword(masterPasswordBytes));
-
-            // clear password fields after success
-            _createPassword.Text = string.Empty;
-            _confirmPassword.Text = string.Empty;
         }
         catch (Exception ex)
         {

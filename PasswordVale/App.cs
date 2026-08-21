@@ -16,7 +16,6 @@ public class App : Application
 
     public override void Initialize()
     {
-        // Add the standard Fluent theme directly in code
         Styles.Add(new FluentTheme());
     }
 

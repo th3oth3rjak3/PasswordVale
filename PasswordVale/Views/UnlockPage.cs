@@ -1,5 +1,7 @@
 ﻿using System.Text;
 
+using Avalonia;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -19,10 +21,25 @@ public class UnlockPage : UserControl
     {
         _vault = vault;
 
+        var titleText = new TextBlock
+        {
+            Text = "Unlock Vault",
+            FontSize = 20,
+            FontWeight = FontWeight.Bold,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+
+        var subtitleText = new TextBlock
+        {
+            Text = "Enter your master password to unlock the vault.",
+            FontSize = 12,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 8)
+        };
+
         _passwordInput = new TextBox
         {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Width = 240,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             PasswordChar = '•',
             RevealPassword = false,
             PlaceholderText = "Enter Master Password"
@@ -31,51 +48,57 @@ public class UnlockPage : UserControl
         _messageText = new TextBlock
         {
             HorizontalAlignment = HorizontalAlignment.Center,
-            Foreground = Brushes.Gray,
-            FontSize = 14
+            FontSize = 13,
+            TextWrapping = TextWrapping.Wrap,
+            TextAlignment = TextAlignment.Center
         };
 
         _submitButton = new Button
         {
-            Content = "Submit",
-            Width = 240,
-            HorizontalAlignment = HorizontalAlignment.Center,
+            Content = "Unlock Vault",
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Center,
+            FontWeight = FontWeight.SemiBold,
             IsEnabled = false
         };
 
         _passwordInput.TextChanged += (_, _) => ValidatePassword();
-        _submitButton.Click += SubmitButton_Click;
-
-
-        var titleText = new TextBlock
+        _passwordInput.KeyDown += (s, e) =>
         {
-            Text = "Unlock Vault",
-            FontSize = 20,
-            FontWeight = FontWeight.Bold,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Foreground = Brushes.White
+            if (e.Key == Key.Enter && _submitButton.IsEnabled)
+            {
+                SubmitButton_Click(this, new RoutedEventArgs());
+            }
         };
+
+        _submitButton.Click += SubmitButton_Click;
 
         var contentBox = new StackPanel
         {
-            Spacing = 16,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
+            Spacing = 14,
+            Children =
+            {
+                titleText,
+                subtitleText,
+                _passwordInput,
+                _messageText,
+                _submitButton
+            }
         };
 
-        contentBox.Children.Add(titleText);
-        contentBox.Children.Add(_passwordInput);
-        contentBox.Children.Add(_messageText);
-        contentBox.Children.Add(_submitButton);
-
-        var grid = new Grid
+        var cardContainer = new Border
         {
-            Background = Brushes.Black
+            Width = 340,
+            Padding = new Thickness(24),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Child = contentBox
         };
 
-        grid.Children.Add(contentBox);
-        Content = grid;
+        Content = new Grid
+        {
+            Children = { cardContainer }
+        };
     }
 
     private async void SubmitButton_Click(object? sender, RoutedEventArgs e)
@@ -92,13 +115,10 @@ public class UnlockPage : UserControl
 
         try
         {
-            SetUiBusy(true, "Unlocking Vault...");
+            SetUiBusy(true, "Unlocking vault...");
 
             var masterPasswordBytes = Encoding.UTF8.GetBytes(masterPassword);
             await Task.Run(async () => await _vault.Unlock(masterPasswordBytes));
-
-            // clear password fields after success
-            _passwordInput.Text = string.Empty;
         }
         catch (Exception ex)
         {
@@ -111,7 +131,7 @@ public class UnlockPage : UserControl
             SetUiBusy(false);
             if (shouldRevalidate)
             {
-                ValidatePassword(false);
+                ValidatePassword(clearMessageText: false);
             }
         }
     }
@@ -122,7 +142,7 @@ public class UnlockPage : UserControl
 
         if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
         {
-            _messageText.Text = "Enter a valid password";
+            _messageText.Text = "Enter a valid master password";
             _messageText.Foreground = Brushes.Orange;
             _submitButton.IsEnabled = false;
             return;

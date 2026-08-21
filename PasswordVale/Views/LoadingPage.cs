@@ -10,25 +10,22 @@ public class LoadingPage : UserControl
 
     public LoadingPage(string initialMessage = "Loading...")
     {
-        _statusLabel = new TextBlock
-        {
-            Text = initialMessage,
-            FontSize = 16,
-            FontWeight = FontWeight.Medium,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Foreground = Brushes.Gray
-        };
-
-        // Indeterminate Progress Bar
         _progressBar = new ProgressBar
         {
             IsIndeterminate = true,
             Width = 240,
-            Height = 6,
+            Height = 4,
             HorizontalAlignment = HorizontalAlignment.Center
         };
 
-        // Inner vertical container
+        _statusLabel = new TextBlock
+        {
+            Text = initialMessage,
+            FontSize = 14,
+            Foreground = Brushes.Gray,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+
         var contentBox = new StackPanel
         {
             Spacing = 16,
@@ -39,17 +36,12 @@ public class LoadingPage : UserControl
         contentBox.Children.Add(_progressBar);
         contentBox.Children.Add(_statusLabel);
 
-        // Root Grid expands to 100% of parent area
-        var rootGrid = new Grid
+        Content = new Grid
         {
-            Background = Brushes.Black
+            Children = { contentBox }
         };
-        rootGrid.Children.Add(contentBox);
-
-        Content = rootGrid;
     }
 
-    // Public method to update status text as loading steps finish
     public void UpdateStatus(string message)
     {
         _statusLabel.Text = message;
